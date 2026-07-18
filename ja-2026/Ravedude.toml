@@ -1,0 +1,7 @@
+[general]
+board = "promini-5v"
+
+port = "/dev/ttyUSB0"
+
+# For documentation about this file, check here:
+# https://github.com/Rahix/avr-hal/blob/main/ravedude/README.md#ravedudetoml-format

@@ -1,0 +1,6 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "cargo build": true
+    },
+    "rust-analyzer.server.path": "/home/dik/.rustup/toolchains/nightly-2025-04-27-x86_64-unknown-linux-gnu/bin/rust-analyzer"
+}
