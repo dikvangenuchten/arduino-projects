@@ -10,6 +10,10 @@ name = "ja-2026"
 test = false
 bench = false
 
+[lib]
+test = false
+bench = false
+
 [target.'cfg(target_arch = "avr")'.dependencies]
 panic-halt = "1.0.0"
 ufmt = "0.2.0"

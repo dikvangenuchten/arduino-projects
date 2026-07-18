@@ -1,5 +1,6 @@
-#![cfg_attr(not(test), no_std)]
+#![cfg_attr(target_arch = "avr", no_std)]
 
+#[cfg(all(test, not(target_arch = "avr")))]
 pub mod board {
     pub const RELAY_COUNT: usize = 8;
     pub const INPUT_COUNT: usize = 8;
@@ -27,17 +28,20 @@ pub mod board {
     }
 }
 
+#[cfg(all(test, not(target_arch = "avr")))]
 #[path = "engine.rs"]
 pub mod engine;
 
+#[cfg(all(test, not(target_arch = "avr")))]
 #[path = "scenes/mod.rs"]
 pub mod scenes;
 
+#[cfg(all(test, not(target_arch = "avr")))]
 pub fn harness_anchor() -> u8 {
     1
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(target_arch = "avr")))]
 mod tests {
     use super::harness_anchor;
 
