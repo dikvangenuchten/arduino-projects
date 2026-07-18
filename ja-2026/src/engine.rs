@@ -195,3 +195,84 @@ impl Engine {
         Ok(self.cur)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[derive(Default)]
+    struct MockBoard {
+        raw_inputs: [bool; INPUTS],
+        relays: [bool; RELAY_COUNT],
+        digits: [u8; DIGIT_COUNT],
+    }
+
+    impl BoardIo for MockBoard {
+        fn read_input_raw(&mut self, idx: usize) -> Result<bool, BoardError> {
+            Ok(self.raw_inputs[idx])
+        }
+
+        fn write_relays(&mut self, relays: [bool; RELAY_COUNT]) -> Result<(), BoardError> {
+            self.relays = relays;
+            Ok(())
+        }
+
+        fn write_display(&mut self, digits: [u8; DIGIT_COUNT]) -> Result<(), BoardError> {
+            self.digits = digits;
+            Ok(())
+        }
+
+        fn refresh_tick(&mut self) -> Result<(), BoardError> {
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn identity_command_does_not_request_mode_changes() {
+        let snapshot = Snapshot::default();
+        let command = snapshot.identity_command();
+
+        assert!(command.input_mode.iter().all(Option::is_none));
+    }
+
+    #[test]
+    fn mode_override_is_applied_without_false_same_tick_toggle() {
+        let mut cfg = EngineConfig::default();
+        cfg.input_modes[0] = InputMode::Momentary;
+
+        let mut engine = Engine::new(cfg);
+        let mut board = MockBoard::default();
+        let mut command = TickCommand::default();
+
+        board.raw_inputs[0] = true;
+        command.input_mode[0] = Some(InputMode::RisingEdgeToggle);
+        let snapshot = engine.tick(&mut board, command).unwrap();
+
+        assert!(matches!(engine.cfg.input_modes[0], InputMode::RisingEdgeToggle));
+        assert!(!snapshot.input_state[0]);
+    }
+
+    #[test]
+    fn mode_override_persists_across_ticks_until_changed_again() {
+        let mut cfg = EngineConfig::default();
+        cfg.input_modes[0] = InputMode::Momentary;
+
+        let mut engine = Engine::new(cfg);
+        let mut board = MockBoard::default();
+
+        let mut first = TickCommand::default();
+        first.input_mode[0] = Some(InputMode::RisingEdgeToggle);
+
+        board.raw_inputs[0] = true;
+        let _ = engine.tick(&mut board, first).unwrap();
+
+        board.raw_inputs[0] = false;
+        let _ = engine.tick(&mut board, TickCommand::default()).unwrap();
+
+        board.raw_inputs[0] = true;
+        let snapshot = engine.tick(&mut board, TickCommand::default()).unwrap();
+
+        assert!(matches!(engine.cfg.input_modes[0], InputMode::RisingEdgeToggle));
+        assert!(snapshot.input_state[0]);
+    }
+}
