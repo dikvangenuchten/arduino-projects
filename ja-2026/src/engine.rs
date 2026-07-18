@@ -32,6 +32,7 @@ impl From<Display> for [u8; DIGIT_COUNT] {
 pub struct TickCommand {
     pub relay_state: [bool; RELAY_COUNT],
     pub display: Display,
+    pub input_mode: [Option<InputMode>; INPUTS],
 }
 
 #[derive(Copy, Clone, Default)]
@@ -47,11 +48,12 @@ impl Snapshot {
         TickCommand {
             relay_state: self.relay_state,
             display: self.display,
+            input_mode: [None; INPUTS],
         }
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub enum InputMode {
     Momentary,
     RisingEdgeToggle,
@@ -150,6 +152,14 @@ impl Engine {
         for idx in 0..INPUTS {
             let raw = board.read_input_raw(idx)?;
             let local = &mut self.input_local[idx];
+
+            if let Some(next_mode) = command.input_mode[idx] {
+                if self.cfg.input_modes[idx] != next_mode {
+                    self.cfg.input_modes[idx] = next_mode;
+                    // Prevent an artificial edge on the same tick as mode switch.
+                    local.last_raw = raw;
+                }
+            }
 
             match self.cfg.input_modes[idx] {
                 InputMode::Momentary => {
