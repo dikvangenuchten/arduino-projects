@@ -46,9 +46,7 @@ impl DisplayRefresher {
 fn TIMER1_COMPA() {
     interrupt::free(|cs| {
         let pending = DISPLAY_TICK_PENDING.borrow(cs).get();
-        DISPLAY_TICK_PENDING
-            .borrow(cs)
-            .set(pending.wrapping_add(1));
+        DISPLAY_TICK_PENDING.borrow(cs).set(pending.wrapping_add(1));
     });
 }
 
@@ -436,9 +434,7 @@ where
     /// - `Err(BoardError::Pin)` on GPIO write failures.
     pub fn tick(&mut self) -> Result<(), BoardError> {
         const TUBE_NUM: [u8; 4] = [0xfe, 0xfd, 0xfb, 0xf7];
-        const TUBE_SEG: [u8; 10] = [
-            0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xf8, 0x80, 0x90,
-        ];
+        const TUBE_SEG: [u8; 10] = [0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xf8, 0x80, 0x90];
 
         self.com_num = (self.com_num + 1) % 4;
         let dat = self.dat_buf[self.com_num] as usize;

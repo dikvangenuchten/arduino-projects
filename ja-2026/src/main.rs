@@ -3,48 +3,48 @@
 #![feature(abi_avr_interrupt)]
 
 mod board;
-mod wrapper;
+mod engine;
+mod scene;
 
 use board::create_from_dp;
+use engine::{Engine, EngineConfig, InputMode, TickCommand};
 use panic_halt as _;
-use wrapper::{ControllerConfig, InputMode, Io22d08Controller, RelayInit};
+use scene::{ButtonCycleSelector, SceneContext, SceneId, SceneManager};
 
 #[arduino_hal::entry]
 fn main() -> ! {
     // Create an abstracted interface to the board peripherals and the display driver.
     let dp = arduino_hal::Peripherals::take().unwrap();
-    let (refresher, board) = create_from_dp(dp);
+    let (refresher, mut board) = create_from_dp(dp);
 
     // Screen needs constant refreshing.
     refresher.enable_interrupts();
 
-    let mut config = ControllerConfig::default();
-    config.button_modes[0] = InputMode::Toggle;
-    config.relay_init[0] = RelayInit::Blink {
-        on_ticks: 250,
-        off_ticks: 250,
-    };
-
-    let mut ctrl = Io22d08Controller::new_with_config(board, config).unwrap();
-
-    let mut value: u16 = 0;
+    let mut config = EngineConfig::default();
+    config.input_modes[0] = InputMode::RisingEdgeToggle;
+    config.input_modes[1] = InputMode::Momentary;
+    config.input_modes[2] = InputMode::Momentary;
+    config.input_modes[3] = InputMode::FallingEdgeToggle;
+    let mut engine = Engine::new(config);
+    let mut command = TickCommand::default();
+    let selector = ButtonCycleSelector::new(3);
+    let mut scene_manager = SceneManager::new(selector, SceneId::Rotate, 100);
 
     loop {
-        ctrl.set_display_number(value);
-        value = value.wrapping_add(1) % 10_000;
-
-        for _ in 0..100 {
-            let pending = refresher.consume_ticks();
-            for _ in 0..pending {
-                let _ = ctrl.sync_tick();
-
-                // Example policy: button 0 toggles relay 0.
-                if let Ok(state) = ctrl.button_state(0) {
-                    let _ = ctrl.set_relay_state(0, state);
-                }
-            }
+        let pending = refresher.consume_ticks();
+        if pending == 0 {
             arduino_hal::delay_ms(1);
+            continue;
+        }
+
+        for _ in 0..pending {
+            if let Ok(snapshot) = engine.tick(&mut board, command) {
+                let ctx = SceneContext {
+                    current: snapshot,
+                    previous: engine.prev,
+                };
+                command = scene_manager.update(&ctx);
+            }
         }
     }
 }
-
