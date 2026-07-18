@@ -3,9 +3,35 @@ use crate::board::{BoardError, Io22d08Api, BUTTON_COUNT, DIGIT_COUNT, INPUT_COUN
 pub const INPUTS: usize = BUTTON_COUNT + INPUT_COUNT;
 
 #[derive(Copy, Clone, Default)]
+pub struct Display(pub [u8; DIGIT_COUNT]);
+
+impl From<[u8; DIGIT_COUNT]> for Display {
+    fn from(value: [u8; DIGIT_COUNT]) -> Self {
+        Self(value)
+    }
+}
+
+impl From<u16> for Display {
+    fn from(mut value: u16) -> Self {
+        let mut digits = [0; DIGIT_COUNT];
+        for idx in (0..DIGIT_COUNT).rev() {
+            digits[idx] = (value % 10) as u8;
+            value /= 10;
+        }
+        Self(digits)
+    }
+}
+
+impl From<Display> for [u8; DIGIT_COUNT] {
+    fn from(value: Display) -> Self {
+        value.0
+    }
+}
+
+#[derive(Copy, Clone, Default)]
 pub struct TickCommand {
     pub relay_state: [bool; RELAY_COUNT],
-    pub display: [u8; DIGIT_COUNT],
+    pub display: Display,
 }
 
 #[derive(Copy, Clone, Default)]
@@ -13,7 +39,7 @@ pub struct Snapshot {
     pub tick: u32,
     pub input_state: [bool; INPUTS],
     pub relay_state: [bool; RELAY_COUNT],
-    pub display: [u8; DIGIT_COUNT],
+    pub display: Display,
 }
 
 impl Snapshot {
@@ -151,7 +177,7 @@ impl Engine {
 
         // 3) Push desired states to board.
         board.write_relays(self.cur.relay_state)?;
-        board.write_display(self.cur.display)?;
+        board.write_display(self.cur.display.into())?;
 
         // 4) Keep multiplex hardware refreshed.
         board.refresh_tick()?;

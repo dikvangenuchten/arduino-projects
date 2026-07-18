@@ -4,12 +4,12 @@
 
 mod board;
 mod engine;
-mod scene;
+mod scenes;
 
 use board::create_from_dp;
 use engine::{Engine, EngineConfig, InputMode, TickCommand};
 use panic_halt as _;
-use scene::{ButtonCycleSelector, SceneContext, SceneId, SceneManager};
+use scenes::{ButtonCycleSelector, SceneContext, SceneId, SceneManager};
 
 #[arduino_hal::entry]
 fn main() -> ! {
@@ -24,11 +24,11 @@ fn main() -> ! {
     config.input_modes[0] = InputMode::RisingEdgeToggle;
     config.input_modes[1] = InputMode::Momentary;
     config.input_modes[2] = InputMode::Momentary;
-    config.input_modes[3] = InputMode::FallingEdgeToggle;
+    config.input_modes[3] = InputMode::Momentary;
     let mut engine = Engine::new(config);
     let mut command = TickCommand::default();
     let selector = ButtonCycleSelector::new(3);
-    let mut scene_manager = SceneManager::new(selector, SceneId::Rotate, 100);
+    let mut scene_manager = SceneManager::new(selector, SceneId::Rotate, 100, 200);
 
     loop {
         let pending = refresher.consume_ticks();
