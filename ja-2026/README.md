@@ -12,3 +12,21 @@ Rust project for the _SparkFun ProMini 5v_.
    - 4 7-segment displays
    - 4 physical buttons
 
+## Development
+
+### Firmware check (AVR target)
+
+Use this to verify the embedded firmware build for the board target:
+
+```bash
+cargo check -q
+```
+
+### Logic tests (host target)
+
+Use this to run host-side unit tests for engine/scene logic:
+
+```bash
+cargo test --target x86_64-unknown-linux-gnu --lib
+```
+
