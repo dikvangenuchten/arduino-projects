@@ -275,4 +275,5 @@ mod tests {
         assert!(matches!(engine.cfg.input_modes[0], InputMode::RisingEdgeToggle));
         assert!(snapshot.input_state[0]);
     }
+
 }
