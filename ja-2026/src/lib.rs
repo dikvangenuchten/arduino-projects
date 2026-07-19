@@ -29,6 +29,10 @@ pub mod board {
 }
 
 #[cfg(all(test, not(target_arch = "avr")))]
+#[path = "log.rs"]
+pub mod log;
+
+#[cfg(all(test, not(target_arch = "avr")))]
 #[path = "engine.rs"]
 pub mod engine;
 

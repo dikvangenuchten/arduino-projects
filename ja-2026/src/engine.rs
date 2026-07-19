@@ -56,7 +56,7 @@ pub struct Snapshot {
     /// Monotonically increasing tick counter (wraps at `u32::MAX`).
     pub tick: u32,
     /// Logical input states for all inputs (buttons first, then opto inputs).
-    pub input_state: [bool; INPUTS],
+    pub input_state: [u8; INPUTS],
     /// Applied relay on/off states.
     pub relay_state: [bool; RELAY_COUNT],
     /// Currently displayed digit values.
@@ -85,6 +85,10 @@ pub enum InputMode {
     RisingEdgeToggle,
     /// Logical state toggles once when the raw input transitions high→low.
     FallingEdgeToggle,
+    /// Counter of rising edges detected on the raw input. Wraps at custom limit.
+    Counter(u8), // (wrap limit)
+    /// Press detection
+    PressDetection
 }
 
 /// Static configuration applied when constructing an [`Engine`].
@@ -108,7 +112,7 @@ pub struct InputLocal {
     /// Raw physical value read on the previous tick, used for edge detection.
     pub last_raw: bool,
     /// Current logical (processed) value exposed in [`Snapshot::input_state`].
-    pub logical: bool,
+    pub logical: u8,
 }
 
 /// Minimal hardware interface consumed by [`Engine::tick`].
@@ -220,16 +224,38 @@ impl Engine {
 
             match self.cfg.input_modes[idx] {
                 InputMode::Momentary => {
-                    local.logical = raw;
+                    local.logical = raw as u8;
                 }
                 InputMode::RisingEdgeToggle => {
                     if raw && !local.last_raw {
-                        local.logical = !local.logical;
+                        match local.logical {
+                            0 => local.logical = 1,
+                            1 => local.logical = 0,
+                            _ => {}
+                        }
                     }
                 }
                 InputMode::FallingEdgeToggle => {
                     if !raw && local.last_raw {
-                        local.logical = !local.logical;
+                        match local.logical {
+                            0 => local.logical = 1,
+                            1 => local.logical = 0,
+                            _ => {}
+                        }
+                    }
+                }
+                InputMode::Counter(wrap) => {
+                    if raw && !local.last_raw {
+                        local.logical = (local.logical + 1) % wrap;
+                    }
+                }
+                InputMode::PressDetection => {
+                    if raw && !local.last_raw {
+                        crate::logln!("Press detected on input {}", idx);
+                        local.logical = 1;
+                    } else {
+                        crate::logln!("No press on input {}", idx);
+                        local.logical = 0;
                     }
                 }
             }
@@ -305,8 +331,11 @@ mod tests {
         command.input_mode[0] = Some(InputMode::RisingEdgeToggle);
         let snapshot = engine.tick(&mut board, command).unwrap();
 
-        assert!(matches!(engine.cfg.input_modes[0], InputMode::RisingEdgeToggle));
-        assert!(!snapshot.input_state[0]);
+        assert!(matches!(
+            engine.cfg.input_modes[0],
+            InputMode::RisingEdgeToggle
+        ));
+        assert!(snapshot.input_state[0] == 0);
     }
 
     #[test]
@@ -329,8 +358,10 @@ mod tests {
         board.raw_inputs[0] = true;
         let snapshot = engine.tick(&mut board, TickCommand::default()).unwrap();
 
-        assert!(matches!(engine.cfg.input_modes[0], InputMode::RisingEdgeToggle));
-        assert!(snapshot.input_state[0]);
+        assert!(matches!(
+            engine.cfg.input_modes[0],
+            InputMode::RisingEdgeToggle
+        ));
+        assert!(snapshot.input_state[0] == 1);
     }
-
 }

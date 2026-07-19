@@ -4,10 +4,12 @@
 
 mod board;
 mod engine;
+mod log;
 mod scenes;
 
 use board::create_from_dp;
 use engine::{Engine, EngineConfig, InputMode, TickCommand};
+use log::init_logger;
 use panic_halt as _;
 use scenes::{ButtonCycleSelector, SceneContext, SceneId, SceneManager};
 
@@ -30,7 +32,8 @@ use scenes::{ButtonCycleSelector, SceneContext, SceneId, SceneManager};
 fn main() -> ! {
     // Create an abstracted interface to the board peripherals and the display driver.
     let dp = arduino_hal::Peripherals::take().unwrap();
-    let (refresher, mut board) = create_from_dp(dp);
+    let (refresher, mut board, mut serial) = create_from_dp(dp);
+    init_logger(&mut serial);
 
     // Screen needs constant refreshing.
     refresher.enable_interrupts();
@@ -47,7 +50,7 @@ fn main() -> ! {
     loop {
         let pending = refresher.consume_ticks();
         if pending == 0 {
-            arduino_hal::delay_ms(1);
+            arduino_hal::delay_ms(100);
             continue;
         }
 

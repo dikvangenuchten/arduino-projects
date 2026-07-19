@@ -87,9 +87,16 @@ pub trait Io22d08Api {
     fn tick(&mut self) -> Result<(), BoardError>;
 }
 
-pub fn create_from_dp(dp: Peripherals) -> (DisplayRefresher, impl Io22d08Api) {
+pub fn create_from_dp(
+    dp: Peripherals,
+) -> (
+    DisplayRefresher,
+    impl Io22d08Api,
+    impl ufmt::uWrite<Error = core::convert::Infallible>,
+) {
     let refresher = DisplayRefresher::new(dp.TC1);
     let pins = arduino_hal::pins!(dp);
+    let serial = arduino_hal::default_serial!(dp, pins, 57600);
 
     let data = pins.d13.into_output();
     let oe_595 = pins.a1.into_output();
@@ -115,7 +122,7 @@ pub fn create_from_dp(dp: Peripherals) -> (DisplayRefresher, impl Io22d08Api) {
     );
 
     let board = Io22d08Board::new(data, oe_595, latch, clock, buttons, inputs);
-    (refresher, board)
+    (refresher, board, serial)
 }
 
 /// Errors returned by board hardware operations.
