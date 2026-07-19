@@ -11,6 +11,21 @@ use engine::{Engine, EngineConfig, InputMode, TickCommand};
 use panic_halt as _;
 use scenes::{ButtonCycleSelector, SceneContext, SceneId, SceneManager};
 
+/// Firmware entry point.
+///
+/// # Tick loop
+///
+/// Timer1 fires at 1 kHz and increments a pending-tick counter. The main loop
+/// drains the counter and calls [`Engine::tick`] once per pending tick, then
+/// feeds the resulting [`Snapshot`] to the [`SceneManager`] which produces the
+/// next [`TickCommand`].
+///
+/// # Input layout (logical indices)
+///
+/// | Index | Source   | Mode               | Role                        |
+/// |-------|----------|--------------------|-----------------------------|
+/// | 0–3   | Buttons  | See config below   | B0: rotate dir, B3: scene   |
+/// | 4–11  | Opto ins | Momentary          | Available for scene logic   |
 #[arduino_hal::entry]
 fn main() -> ! {
     // Create an abstracted interface to the board peripherals and the display driver.
@@ -21,10 +36,9 @@ fn main() -> ! {
     refresher.enable_interrupts();
 
     let mut config = EngineConfig::default();
-    config.input_modes[0] = InputMode::RisingEdgeToggle;
-    config.input_modes[1] = InputMode::Momentary;
-    config.input_modes[2] = InputMode::Momentary;
-    config.input_modes[3] = InputMode::Momentary;
+    for i in 0..12 {
+        config.input_modes[i] = InputMode::Momentary;
+    }
     let mut engine = Engine::new(config);
     let mut command = TickCommand::default();
     let selector = ButtonCycleSelector::new(3);

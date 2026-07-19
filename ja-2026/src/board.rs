@@ -5,13 +5,21 @@ use avr_device::interrupt::{self, Mutex};
 use core::cell::Cell;
 use embedded_hal::digital::{InputPin, OutputPin};
 
+/// Number of relay outputs on the IO22D08 board.
 pub const RELAY_COUNT: usize = 8;
+/// Number of opto-coupled digital inputs on the IO22D08 board.
 pub const INPUT_COUNT: usize = 8;
+/// Number of physical push-buttons on the IO22D08 board.
 pub const BUTTON_COUNT: usize = 4;
+/// Number of 7-segment display digits on the IO22D08 board.
 pub const DIGIT_COUNT: usize = 4;
 
 static DISPLAY_TICK_PENDING: Mutex<Cell<u8>> = Mutex::new(Cell::new(0));
 
+/// Drives the display multiplex via a 1 kHz Timer1 interrupt.
+///
+/// The interrupt increments a pending-tick counter; the main loop calls
+/// [`DisplayRefresher::consume_ticks`] to drain it and tick the engine accordingly.
 pub struct DisplayRefresher;
 
 impl DisplayRefresher {
@@ -29,10 +37,15 @@ impl DisplayRefresher {
         Self
     }
 
+    /// Globally enables AVR interrupts so the Timer1 ISR can fire.
     pub fn enable_interrupts(&self) {
         unsafe { avr_device::interrupt::enable() };
     }
 
+    /// Atomically reads and resets the pending-tick counter.
+    ///
+    /// Returns the number of ticks that fired since the last call. The main loop
+    /// should call [`Engine::tick`] this many times to stay in sync.
     pub fn consume_ticks(&self) -> u8 {
         interrupt::free(|cs| {
             let pending = DISPLAY_TICK_PENDING.borrow(cs).get();
@@ -50,14 +63,27 @@ fn TIMER1_COMPA() {
     });
 }
 
+/// Full hardware API for the Eletechsup IO22D08 expansion board.
+///
+/// Implemented by [`Io22d08Board`]. [`BoardIo`][crate::engine::BoardIo] is a
+/// blanket-implemented subset used by the engine to avoid taking on hardware
+/// dependencies in scene logic tests.
 pub trait Io22d08Api {
+    /// Write a 4-digit decimal number to the display buffer (applied on the next `tick`).
     fn set_number(&mut self, value: u16);
+    /// Set a single display digit by position (`0` = leftmost).
     fn show_digit(&mut self, position: usize, value: u8) -> Result<(), BoardError>;
+    /// Turn a relay on by index (`0`-based).
     fn relay_on(&mut self, relay: usize) -> Result<(), BoardError>;
+    /// Turn a relay off by index.
     fn relay_off(&mut self, relay: usize) -> Result<(), BoardError>;
+    /// Toggle a relay by index.
     fn relay_toggle(&mut self, relay: usize) -> Result<(), BoardError>;
+    /// Read one of the 4 physical buttons (low-active, returns logical `true` when pressed).
     fn read_button(&mut self, button: usize) -> Result<bool, BoardError>;
+    /// Read one of the 8 opto-coupled inputs (low-active, returns logical `true` when active).
     fn read_input(&mut self, input: usize) -> Result<bool, BoardError>;
+    /// Advance the display multiplex by one digit. Must be called at ~1 kHz.
     fn tick(&mut self) -> Result<(), BoardError>;
 }
 
@@ -92,12 +118,18 @@ pub fn create_from_dp(dp: Peripherals) -> (DisplayRefresher, impl Io22d08Api) {
     (refresher, board)
 }
 
+/// Errors returned by board hardware operations.
 #[derive(Copy, Clone, Debug)]
 pub enum BoardError {
+    /// Relay index is out of range (`>= RELAY_COUNT`).
     InvalidRelayIndex,
+    /// Input index is out of range (`>= INPUT_COUNT`).
     InvalidInputIndex,
+    /// Button index is out of range (`>= BUTTON_COUNT`).
     InvalidButtonIndex,
+    /// Digit position is out of range (`>= DIGIT_COUNT`).
     InvalidDigitIndex,
+    /// A GPIO read or write operation failed.
     Pin,
 }
 

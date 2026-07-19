@@ -2,6 +2,13 @@ use crate::engine::TickCommand;
 
 use super::{Scene, SceneContext, SceneId};
 
+/// Scene that rotates a single active relay around all relays in sequence.
+///
+/// - **Speed** (ticks between steps) is adjustable at runtime via inputs 1 and 2.
+/// - **Direction** is controlled by input 0 (high = clockwise, low = counter-clockwise).
+/// - **Lag** keeps the previous relay on for an extra number of ticks, creating a trailing effect.
+///   A lag of 0 is equivalent to the classic single-relay chase.
+/// - The 4-digit display shows the current speed value each tick.
 pub struct RotateScene {
     speed: u32,
     lag: u32,
@@ -10,6 +17,10 @@ pub struct RotateScene {
 }
 
 impl RotateScene {
+    /// Creates a new rotate scene.
+    ///
+    /// - `speed`: initial ticks between relay steps (clamped to ≥ 1).
+    /// - `lag`: how many extra ticks the previous relay stays on after a step (0 = instant off).
     pub fn new(speed: u32, lag: u32) -> Self {
         Self {
             speed: speed.max(1),

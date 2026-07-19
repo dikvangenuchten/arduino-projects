@@ -1,11 +1,13 @@
 use super::{SceneContext, SceneId, SceneSelector};
 
+/// Cycles through all [`SceneId`] variants in order on every rising edge of one button.
 pub struct ButtonCycleSelector {
     index: usize,
     last_state: bool,
 }
 
 impl ButtonCycleSelector {
+    /// Creates a selector driven by the logical input at `index`.
     pub fn new(index: usize) -> Self {
         Self {
             index,
