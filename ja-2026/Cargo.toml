@@ -10,6 +10,10 @@ name = "ja-2026"
 test = false
 bench = false
 
+[lib]
+name = "ja_2026"
+path = "src/lib.rs"
+
 [dependencies]
 panic-halt = "1.0.0"
 ufmt = "0.2.0"

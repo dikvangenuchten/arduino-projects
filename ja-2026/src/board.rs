@@ -4,6 +4,7 @@ use arduino_hal::Peripherals;
 use avr_device::interrupt::{self, Mutex};
 use core::cell::Cell;
 use embedded_hal::digital::{InputPin, OutputPin};
+use ja_2026::board_api::{BoardError, Io22d08Api};
 
 pub const RELAY_COUNT: usize = 8;
 pub const INPUT_COUNT: usize = 8;
@@ -52,17 +53,6 @@ fn TIMER1_COMPA() {
     });
 }
 
-pub trait Io22d08Api {
-    fn set_number(&mut self, value: u16);
-    fn show_digit(&mut self, position: usize, value: u8) -> Result<(), BoardError>;
-    fn relay_on(&mut self, relay: usize) -> Result<(), BoardError>;
-    fn relay_off(&mut self, relay: usize) -> Result<(), BoardError>;
-    fn relay_toggle(&mut self, relay: usize) -> Result<(), BoardError>;
-    fn read_button(&mut self, button: usize) -> Result<bool, BoardError>;
-    fn read_input(&mut self, input: usize) -> Result<bool, BoardError>;
-    fn tick(&mut self) -> Result<(), BoardError>;
-}
-
 pub fn create_from_dp(dp: Peripherals) -> (DisplayRefresher, impl Io22d08Api) {
     let refresher = DisplayRefresher::new(dp.TC1);
     let pins = arduino_hal::pins!(dp);
@@ -94,15 +84,6 @@ pub fn create_from_dp(dp: Peripherals) -> (DisplayRefresher, impl Io22d08Api) {
     (refresher, board)
 }
 
-#[derive(Copy, Clone, Debug)]
-pub enum BoardError {
-    InvalidRelayIndex,
-    InvalidInputIndex,
-    InvalidButtonIndex,
-    InvalidDigitIndex,
-    Pin,
-}
-
 struct DigitalInput<P>
 where
     P: InputPin,
@@ -123,6 +104,19 @@ where
         Ok(!high)
     }
 }
+
+/// The eight external input pins (I0-I7), in order. Named to avoid
+/// clippy's `type_complexity` lint on the raw 8-tuple.
+type ExternalInputPins<I0, I1, I2, I3, I4, I5, I6, I7> = (
+    DigitalInput<I0>,
+    DigitalInput<I1>,
+    DigitalInput<I2>,
+    DigitalInput<I3>,
+    DigitalInput<I4>,
+    DigitalInput<I5>,
+    DigitalInput<I6>,
+    DigitalInput<I7>,
+);
 
 pub struct Io22d08Board<DATA, LATCH, CLOCK, B0, B1, B2, B3, I0, I1, I2, I3, I4, I5, I6, I7>
 where
@@ -151,16 +145,7 @@ where
         DigitalInput<B2>,
         DigitalInput<B3>,
     ),
-    inputs: (
-        DigitalInput<I0>,
-        DigitalInput<I1>,
-        DigitalInput<I2>,
-        DigitalInput<I3>,
-        DigitalInput<I4>,
-        DigitalInput<I5>,
-        DigitalInput<I6>,
-        DigitalInput<I7>,
-    ),
+    inputs: ExternalInputPins<I0, I1, I2, I3, I4, I5, I6, I7>,
     dat_buf: [u8; DIGIT_COUNT],
     relay_port: u8,
     com_num: usize,
