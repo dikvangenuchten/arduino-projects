@@ -1,5 +1,5 @@
 #!/bin/bash
-# Run host-side unit tests for the pure domain logic.
+# Run host-side tests for the pure domain logic.
 # Usage: ./test.sh
 
 set -e

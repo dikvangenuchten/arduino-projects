@@ -7,15 +7,66 @@ description: "Implement relay control architecture phases using test-driven deve
 
 ## Objective
 
-Deliver each phase as a series of small, committed red-green-refactor cycles that maintain a stable, testable codebase with clear historical markers.
+Implement a phase specification from .github/agents/relay-input-control-rewrite-plan.md as a series of small, committed red-green-refactor cycles that maintain a stable, testable codebase with clear historical markers.
+
+## Starting Prompt Template
+
+When beginning a phase implementation, the user should provide:
+
+```
+I want to implement [Phase N - Brief Title] from the relay control architecture plan.
+
+**Phase Specification:** See .github/agents/relay-input-control-rewrite-plan.md, [Phase N] section
+
+**Instructions:**
+1. Before starting, clarify the specification with me using vscode_askQuestions
+2. Ask **one targeted question at a time** about areas that are unclear or ambiguous
+3. Continue asking until you understand the specification well enough to proceed
+4. Then show me the step-by-step implementation plan for approval
+
+**Implementation Workflow:**
+- Follow this skill for TDD, commits, and reporting
+- Write failing tests first (Red), commit with type `test`
+- Implement to make tests pass (Green), amend commit to type `feat`
+- Refactor while keeping tests green (Refactor), amend same commit
+- Follow Conventional Commits and phase-implementation skill guidelines
+
+**Scope:**
+- Host test gate required: `cargo test --lib --target x86_64-unknown-linux-gnu` must pass
+- All new behavior must have tests in `tests/unit/` or `tests/behavior/`
+- [Optional: List any specific gates or constraints for this phase]
+
+**Report at End:**
+Provide implementation report with:
+1. Decisions Summary (key design choices)
+2. Key Implementation Details (types, functions, constants)
+3. Test Summary (all tests added, with ✅/❌ status)
+4. Final Test Run Output
+5. Phase Completion Checklist
+6. Question: "Is [Phase N] ready to mark [DONE]?"
+```
 
 ## Core Principles
+
+### 0. Clarify Before Implementing (Agent Responsibility)
+
+Before writing any code:
+- **Read the phase specification** in .github/agents/relay-input-control-rewrite-plan.md
+- **Identify unclear or ambiguous areas** (design decisions, edge cases, field names, algorithms)
+- **Ask the user one targeted question at a time** using vscode_askQuestions tool
+- **Continue asking until you have enough clarity** to proceed with confidence
+- **Do not ask redundant questions**; if the spec is clear, move on
+- **Show the user your implementation plan** (step-by-step checklist) before starting
+- **Wait for user approval** before writing production code
+
+This ensures the agent and user are aligned on the phase requirements before effort is invested.
 
 ### 1. Always Test First (Red-Green-Refactor)
 
 Before writing any production code:
 - **Write a failing test** that expresses the missing behavior
-- **Verify it fails** for the intended reason (not fixture errors or unrelated failures)
+- **Make the test compile first**; if the test references a new API, add a minimal compiling stub (for example, a no-op `tick_1ms()`) before evaluating red-state failure
+- **Verify it fails** for the intended reason (not compile errors, fixture errors, or unrelated failures)
 - **Implement minimum code** to make the test pass
 - **Refactor** with tests remaining green
 - **Repeat** for the next behavior slice
@@ -34,10 +85,16 @@ Commit once per completed red-green-refactor cycle:
 
 ## Implementation Checklist
 
-- [ ] Read the phase specification and clarify ambiguities with the user
-- [ ] Define constants and types in `config.rs`
+- [ ] Read the phase specification from .github/agents/relay-input-control-rewrite-plan.md
+- [ ] Ask clarifying questions one at a time (if specification has ambiguous areas)
+- [ ] Continue asking until specification is understood
+- [ ] Show the user a step-by-step implementation plan for approval
+- [ ] Wait for user approval before proceeding
+- [ ] Define constants and types in appropriate files
+- [ ] Place tests in `tests/unit/` (module-focused) or `tests/behavior/` (grouped behaviors)
 - [ ] Write table-driven **failing tests** (Red)
-- [ ] Run tests, confirm failures for intended reasons
+- [ ] Ensure tests compile (add minimal stubs for new APIs when needed)
+- [ ] Run tests, confirm behavioral failures for intended reasons
 - [ ] **Commit failing tests** with conventional message type `test`
 - [ ] Implement production code (Green)
 - [ ] Run focused and full test suite, confirm passes
@@ -47,6 +104,7 @@ Commit once per completed red-green-refactor cycle:
 - [ ] Verify host gate: `cargo test --lib --target x86_64-unknown-linux-gnu`
 - [ ] Add boundary and regression cases in proportion to risk
 - [ ] Generate implementation report (see below)
+- [ ] Ask user: "Is [Phase N] ready to mark [DONE]?"
 
 ## Implementation Report Template
 
@@ -92,6 +150,7 @@ Explicit yes/no confirmation:
 
 - Do not implement features speculatively; follow the phase specification exactly
 - Do not delete a valid test to make an implementation pass
+- Do not treat compilation failures as red-state test failures; fix compilation (including temporary stubs) first
 - Do not amend a commit that has been published or may be based on by other contributors
 - Inspect staged diff before every commit
 - Do not commit a red test until its failure has been observed and understood

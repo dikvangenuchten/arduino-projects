@@ -18,11 +18,5 @@ pub mod input;
 pub mod debug;
 
 #[cfg(test)]
-mod tests {
-    #[test]
-    fn test_harness_loads() {
-        // Minimal test to verify the test harness runs successfully.
-        // Phase 1+ will add substantive tests here and in dedicated test modules.
-        assert_eq!(2 + 2, 4);
-    }
-}
+#[path = "../tests/mod.rs"]
+mod tests;

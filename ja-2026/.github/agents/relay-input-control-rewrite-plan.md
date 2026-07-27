@@ -17,7 +17,7 @@ Replace the monolithic control policy with a `no_std`, host-testable library con
 8. Speed actions move each relay's speed toward shorter durations (SpeedAllUp) or longer durations (SpeedAllDown), stopping at the nearest defined level [1200, 800, 500, 300, 150], clamping each relay independently. Examples: 300→150 (up), 301→300 (up, next level), 301→500 (down, next level), 499→500 (down). Tests must begin with deliberately different relay speeds to prove the action does not rely on shared speed state.
 9. Add a compile-time global inclusion mask and test with a non-default mask that excluded relays remain untouched by global mode actions. Speed actions target all relays, independent of this mode-action mask.
 
-### Phase 2 - Per-relay blink engine
+### Phase 2 - Per-relay blink engine [DONE]
 10. Write failing synthetic-tick tests, then implement independent per-relay timing using half-cycle values `[1200, 800, 500, 300, 150]` ms. Every relay boots with speed index `2`; there is no controller-wide current speed.
 11. Entering Blink starts that relay On with a full half-cycle selected from its stored speed. Leaving Blink immediately produces the commanded steady output. Re-entering Blink uses that relay's current stored speed and starts a new independent phase origin.
 12. When `SpeedAllUp` or `SpeedAllDown` changes stored indices, every active relay finishes its current half-cycle and loads its own new duration at its next phase transition. Relays at different countdown offsets remain offset.
@@ -68,7 +68,7 @@ Replace the monolithic control policy with a `no_std`, host-testable library con
 5. On device, verify one action per held press, same-tick and prior-held Shift behavior, all eight relay mappings, mixed global behavior, B0/B1/B2 selection, B1/B2 paging, B3 no-op, modal speed display, boot defaults, and that diagnostics never change relay modes or speeds.
 
 **Decisions**
-- Full control-layer rewrite; backward compatibility with per-relay asymmetric On/Off timing is excluded.
+- Full control-layer rewrite with per-relay asymmetric On/Off timing out of scope.
 - Every relay independently owns speed index, timing policy, phase, and countdown. There is no shared current speed or shared blink phase.
 - The current Speed key changes all eight stored speed indices; each is clamped independently. Global Blink preserves per-relay speeds.
 - Fixed speed values are per half-cycle, not full-cycle periods. Active phases finish before adopting changed speed indices.
