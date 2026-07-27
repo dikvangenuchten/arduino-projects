@@ -153,6 +153,12 @@ impl ExternalInputs {
         self.prev_stable = stable;
         actions
     }
+
+    /// The most recently committed debounced snapshot of all eight
+    /// external inputs (updated once per `tick_1ms` call).
+    pub fn stable(&self) -> [bool; INPUT_COUNT] {
+        self.prev_stable
+    }
 }
 
 impl Default for ExternalInputs {

@@ -112,3 +112,12 @@ fn releasing_shift_before_the_action_press_is_unshifted() {
     let actions = settle(&mut inputs, raw_with(&[0]));
     assert_eq!(actions[0], Some(Action::TogglePower(0)));
 }
+
+#[test]
+fn stable_reflects_the_last_committed_debounced_snapshot() {
+    let mut inputs = ExternalInputs::new();
+    assert_eq!(inputs.stable(), [false; INPUT_COUNT]);
+
+    settle(&mut inputs, raw_with(&[0, 2]));
+    assert_eq!(inputs.stable(), raw_with(&[0, 2]));
+}
