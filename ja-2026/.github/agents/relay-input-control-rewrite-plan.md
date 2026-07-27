@@ -37,7 +37,7 @@ Replace the monolithic control policy with a `no_std`, host-testable library con
 22. Inputs view displays four raw logical input states as `0/1`; repeated `B1` presses toggle pages `I0-I3` and `I4-I7`.
 23. Relay view displays four modes as `0=Off`, `1=Blink`, `2=On`; repeated `B2` presses toggle pages relays 1-4 and 5-8. Test selection, repeated-press paging, and reserved-button no-op behavior.
 
-### Phase 5 - AVR integration
+### Phase 5 - AVR integration [DONE]
 24. Refactor `Io22d08Controller` into the orchestrator: read normalized hardware snapshots through `Io22d08Api`, debounce/map external inputs, dispatch all emitted semantic actions, tick each relay's blink engine once per consumed 1 ms timer tick, flush changed relay outputs, update the selected diagnostic display, and call the board tick.
 25. Remove the example counter and direct button-to-relay policy from `main.rs`; retain peripheral setup, interrupt enabling, controller construction, and the pending-tick loop.
 26. Boot with all relays Off and each relay's speed index set to `2`; add no EEPROM persistence.
