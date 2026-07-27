@@ -5,6 +5,5 @@
 set -e
 
 echo "Building and flashing AVR firmware..."
-cargo build -Z build-std=core --release
-echo "✓ Firmware built successfully"
-echo "✓ Device programmed via ravedude"
+cargo run -Z build-std=core --release
+echo "✓ Device programmed successfully"
