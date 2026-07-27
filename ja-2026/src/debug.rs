@@ -5,6 +5,7 @@
 //! relay/controller state; rendering only ever reads shared snapshots.
 
 use crate::config::{BUTTON_COUNT, INPUT_COUNT, SPEED_LEVELS_MS};
+use crate::input::Debouncer;
 use crate::relay::{RelayBank, RelayMode};
 
 /// Which diagnostic view is currently selected.
@@ -173,5 +174,42 @@ fn relay_mode_digit(mode: RelayMode) -> u8 {
         RelayMode::Off => 0,
         RelayMode::Blink => 1,
         RelayMode::On => 2,
+    }
+}
+
+/// Debounces the 4 built-in buttons and detects their press edges, using
+/// the same generic primitive and threshold as the external inputs.
+pub struct ButtonInputs {
+    debouncer: Debouncer<BUTTON_COUNT>,
+    prev_stable: [bool; BUTTON_COUNT],
+}
+
+impl ButtonInputs {
+    /// Construct with all buttons idle.
+    pub fn new() -> Self {
+        ButtonInputs {
+            debouncer: Debouncer::new(),
+            prev_stable: [false; BUTTON_COUNT],
+        }
+    }
+
+    /// Feed one 1 ms raw sample for all 4 buttons (already active-low
+    /// normalized by the board) and return this tick's press edges.
+    pub fn tick_1ms(&mut self, raw: [bool; BUTTON_COUNT]) -> [bool; BUTTON_COUNT] {
+        let stable = self.debouncer.sample(raw);
+
+        let mut edges = [false; BUTTON_COUNT];
+        for i in 0..BUTTON_COUNT {
+            edges[i] = stable[i] && !self.prev_stable[i];
+        }
+
+        self.prev_stable = stable;
+        edges
+    }
+}
+
+impl Default for ButtonInputs {
+    fn default() -> Self {
+        Self::new()
     }
 }
