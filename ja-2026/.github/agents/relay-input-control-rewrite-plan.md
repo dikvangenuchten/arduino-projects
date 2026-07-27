@@ -43,7 +43,7 @@ Replace the monolithic control policy with a `no_std`, host-testable library con
 26. Boot with all relays Off and each relay's speed index set to `2`; add no EEPROM persistence.
 27. Update README controls, mode transitions, per-relay speed ownership, half-cycle timing, diagnostics, and boot defaults. Note that the current Speed key changes all stored relay speeds even though the model permits them to diverge.
 
-### Phase 6 - Regression and refactor
+### Phase 6 - Regression and refactor [DONE]
 28. Run all host tests after each phase and after cleanup. Refactor only while tests remain green.
 29. Build the AVR firmware and perform the on-device checks below.
 
