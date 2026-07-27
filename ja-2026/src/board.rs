@@ -105,6 +105,19 @@ where
     }
 }
 
+/// The eight external input pins (I0-I7), in order. Named to avoid
+/// clippy's `type_complexity` lint on the raw 8-tuple.
+type ExternalInputPins<I0, I1, I2, I3, I4, I5, I6, I7> = (
+    DigitalInput<I0>,
+    DigitalInput<I1>,
+    DigitalInput<I2>,
+    DigitalInput<I3>,
+    DigitalInput<I4>,
+    DigitalInput<I5>,
+    DigitalInput<I6>,
+    DigitalInput<I7>,
+);
+
 pub struct Io22d08Board<DATA, LATCH, CLOCK, B0, B1, B2, B3, I0, I1, I2, I3, I4, I5, I6, I7>
 where
     DATA: OutputPin,
@@ -132,16 +145,7 @@ where
         DigitalInput<B2>,
         DigitalInput<B3>,
     ),
-    inputs: (
-        DigitalInput<I0>,
-        DigitalInput<I1>,
-        DigitalInput<I2>,
-        DigitalInput<I3>,
-        DigitalInput<I4>,
-        DigitalInput<I5>,
-        DigitalInput<I6>,
-        DigitalInput<I7>,
-    ),
+    inputs: ExternalInputPins<I0, I1, I2, I3, I4, I5, I6, I7>,
     dat_buf: [u8; DIGIT_COUNT],
     relay_port: u8,
     com_num: usize,

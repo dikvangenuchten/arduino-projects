@@ -143,6 +143,12 @@ pub struct RelayBank {
     relays: [RelayState; RELAY_COUNT],
 }
 
+impl Default for RelayBank {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl RelayBank {
     /// Construct a new relay bank with all relays Off and boot speed.
     pub fn new() -> Self {
