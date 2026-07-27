@@ -87,7 +87,7 @@ pub fn map_edges(edges: [bool; INPUT_COUNT], shifted: bool) -> [Option<Action>; 
     for i in 0..IDX_SHIFT {
         if edges[i] {
             actions[i] = Some(if shifted {
-                Action::ToggleBlink(i + 4)
+                Action::TogglePower(i + 4)
             } else {
                 Action::TogglePower(i)
             });

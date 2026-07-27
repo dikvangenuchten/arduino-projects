@@ -32,13 +32,13 @@ fn relay_keys_unshifted_toggle_power_on_relays_zero_to_three() {
 }
 
 #[test]
-fn relay_keys_shifted_toggle_blink_on_relays_four_to_seven() {
+fn relay_keys_shifted_toggle_power_on_relays_four_to_seven() {
     let edges = edges_with(&[0, 1, 2, 3]);
     let actions = map_edges(edges, true);
-    assert_eq!(actions[0], Some(Action::ToggleBlink(4)));
-    assert_eq!(actions[1], Some(Action::ToggleBlink(5)));
-    assert_eq!(actions[2], Some(Action::ToggleBlink(6)));
-    assert_eq!(actions[3], Some(Action::ToggleBlink(7)));
+    assert_eq!(actions[0], Some(Action::TogglePower(4)));
+    assert_eq!(actions[1], Some(Action::TogglePower(5)));
+    assert_eq!(actions[2], Some(Action::TogglePower(6)));
+    assert_eq!(actions[3], Some(Action::TogglePower(7)));
 }
 
 #[test]

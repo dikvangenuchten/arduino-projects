@@ -87,7 +87,7 @@ fn shift_and_action_accepted_on_the_same_tick_are_shifted() {
     let mut inputs = ExternalInputs::new();
     // I4 (Shift) and I0 both cross the debounce threshold on the identical tick.
     let actions = settle(&mut inputs, raw_with(&[4, 0]));
-    assert_eq!(actions[0], Some(Action::ToggleBlink(4)));
+    assert_eq!(actions[0], Some(Action::TogglePower(4)));
     // Shift itself never emits an action.
     assert_eq!(actions[4], None);
 }
@@ -100,7 +100,7 @@ fn shift_already_held_applies_to_a_later_action_press() {
 
     // I0 is pressed later, on its own debounce run, while Shift is still held.
     let actions = settle(&mut inputs, raw_with(&[4, 0]));
-    assert_eq!(actions[0], Some(Action::ToggleBlink(4)));
+    assert_eq!(actions[0], Some(Action::TogglePower(4)));
 }
 
 #[test]

@@ -18,7 +18,7 @@ Rust project for the _SparkFun ProMini 5v_.
 
 | Input | Unshifted | Shifted |
 | --- | --- | --- |
-| I0-I3 | Toggle power (Off <-> On) on relays 1-4 | Toggle blink (Off/On <-> Blink) on relays 5-8 |
+| I0-I3 | Toggle power (Off <-> On) on relays 1-4 | Toggle power (Off <-> On) on relays 5-8 |
 | I4 | Shift (momentary; held only) | - |
 | I5 | Global power: all included relays On if currently all Off, else all Off | Global blink: force all included relays to Blink, preserving speeds |
 | I6 | Speed up: move every relay's speed toward shorter half-cycles | Speed down: move every relay's speed toward longer half-cycles |

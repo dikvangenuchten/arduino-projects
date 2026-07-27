@@ -27,7 +27,7 @@ Replace the monolithic control policy with a `no_std`, host-testable library con
 ### Phase 3 - Debounce and input mapping [DONE]
 15. Separate debouncing from mapping. Debounce all eight external inputs and four built-in buttons after active-low normalization, accepting a change after 10 consecutive 1 ms samples.
 16. Test press edge, held input, release/repress, bounce reset, simultaneous actions, and Shift/action acceptance on the same tick. Commit one stable snapshot first, then resolve Shift before emitting action press edges, so Shift and action accepted together are shifted.
-17. Implement the default external mapping in one static configuration: `I0-I3` relay keys 1-4, `I4` Shift, `I5` Global, `I6` Speed, `I7` Reserved. Without Shift, relay keys target relays 1-4 and emit power toggles; with Shift, they target relays 5-8 and emit blink toggles. Shift also selects global blink and `SpeedAllDown`; unshifted Speed emits `SpeedAllUp`.
+17. Implement the default external mapping in one static configuration: `I0-I3` relay keys 1-4, `I4` Shift, `I5` Global, `I6` Speed, `I7` Reserved. Without Shift, relay keys target relays 1-4 and emit power toggles; with Shift, they target relays 5-8 and also emit power toggles (per-relay `ToggleBlink` is not reachable from external inputs; blink is only entered via `GlobalBlink`). Shift also selects global blink and `SpeedAllDown`; unshifted Speed emits `SpeedAllUp`.
 18. Keep Shift mode represented by a small enum/constant with momentary as the only required behavior; a future latched variant may be added later, but do not implement unrequested latch state now.
 
 ### Phase 4 - Read-only diagnostics [DONE]

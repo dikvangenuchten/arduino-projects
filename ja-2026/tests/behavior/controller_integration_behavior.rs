@@ -179,12 +179,13 @@ fn button_b3_is_a_reserved_no_op() {
 #[test]
 fn a_relay_in_blink_mode_independently_completes_its_half_cycle() {
     let (mut ctrl, state) = new_controller();
-    // Shift (I4) + relay key I0 accepted on the same debounce window ->
-    // shifted ToggleBlink targeting relay 4.
+    // I5 (Global) unshifted -> GlobalBlink is not available; use Shift +
+    // Global (I4+I5) accepted on the same debounce window -> GlobalBlink,
+    // forcing every included relay (all 8 by default) into Blink.
     {
         let mut state = state.borrow_mut();
         state.inputs[4] = true;
-        state.inputs[0] = true;
+        state.inputs[5] = true;
     }
     tick_n(&mut ctrl, DEBOUNCE_SAMPLES);
 
