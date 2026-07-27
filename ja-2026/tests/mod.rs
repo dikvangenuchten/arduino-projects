@@ -16,3 +16,5 @@ mod blink_speed_behavior;
 
 #[path = "unit/input_debounce_tests.rs"]
 mod input_debounce_tests;
+#[path = "unit/input_mapping_tests.rs"]
+mod input_mapping_tests;

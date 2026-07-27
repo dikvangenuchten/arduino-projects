@@ -4,7 +4,8 @@
 //! active-low normalization by the board), detect press edges, resolve
 //! Shift, and map to semantic `Action`s via one static table.
 
-use crate::config::DEBOUNCE_SAMPLES;
+use crate::config::{ShiftMode, DEBOUNCE_SAMPLES, INPUT_COUNT};
+use crate::action::Action;
 
 /// Debounces `N` independent logical input lines.
 ///
@@ -52,4 +53,60 @@ impl<const N: usize> Default for Debouncer<N> {
     fn default() -> Self {
         Self::new()
     }
+}
+
+/// Index of the Shift line among the external inputs.
+const IDX_SHIFT: usize = 4;
+/// Index of the Global mode line among the external inputs.
+const IDX_GLOBAL: usize = 5;
+/// Index of the Speed line among the external inputs.
+const IDX_SPEED: usize = 6;
+/// Index of the Reserved (no-op) line among the external inputs.
+const IDX_RESERVED: usize = 7;
+
+/// Resolve whether the mapper should treat this tick as shifted, given the
+/// configured `ShiftMode` and the Shift line's current stable level.
+pub fn resolve_shifted(mode: ShiftMode, shift_line_stable: bool) -> bool {
+    match mode {
+        ShiftMode::Momentary => shift_line_stable,
+    }
+}
+
+/// Map press edges (rising transitions of the debounced stable snapshot) to
+/// semantic actions using the static default external mapping:
+/// I0-I3 relay keys, I4 Shift, I5 Global, I6 Speed, I7 Reserved.
+pub fn map_edges(edges: [bool; INPUT_COUNT], shifted: bool) -> [Option<Action>; INPUT_COUNT] {
+    let mut actions = [None; INPUT_COUNT];
+
+    for i in 0..IDX_SHIFT {
+        if edges[i] {
+            actions[i] = Some(if shifted {
+                Action::ToggleBlink(i + 4)
+            } else {
+                Action::TogglePower(i)
+            });
+        }
+    }
+
+    if edges[IDX_GLOBAL] {
+        actions[IDX_GLOBAL] = Some(if shifted {
+            Action::GlobalBlink
+        } else {
+            Action::GlobalPower
+        });
+    }
+
+    if edges[IDX_SPEED] {
+        actions[IDX_SPEED] = Some(if shifted {
+            Action::SpeedAllDown
+        } else {
+            Action::SpeedAllUp
+        });
+    }
+
+    if edges[IDX_RESERVED] {
+        actions[IDX_RESERVED] = Some(Action::Reserved);
+    }
+
+    actions
 }

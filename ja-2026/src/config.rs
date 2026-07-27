@@ -31,3 +31,14 @@ pub const GLOBAL_MODE_INCLUSION_MASK: u8 = 0xFF; // binary 11111111
 /// Debounce threshold: accept a change after this many consecutive 1ms samples.
 /// Phase 1: placeholder; used in Phase 3.
 pub const DEBOUNCE_SAMPLES: u32 = 10;
+
+/// Shift behavior. Only `Momentary` is implemented; a future `Latched`
+/// variant may be added later without changing call sites.
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum ShiftMode {
+    /// Shift applies only while its input line is currently held (level-sensitive).
+    Momentary,
+}
+
+/// Active shift behavior for the external input mapper.
+pub const SHIFT_MODE: ShiftMode = ShiftMode::Momentary;
