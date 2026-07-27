@@ -4,7 +4,8 @@
 //! calculation, and page selection. No function here receives mutable
 //! relay/controller state; rendering only ever reads shared snapshots.
 
-use crate::config::BUTTON_COUNT;
+use crate::config::{BUTTON_COUNT, SPEED_LEVELS_MS};
+use crate::relay::RelayBank;
 
 /// Which diagnostic view is currently selected.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -100,4 +101,21 @@ impl Default for DiagnosticState {
     fn default() -> Self {
         Self::new()
     }
+}
+
+/// Compute the modal (most frequent) stored per-relay period, in ms.
+/// Ties choose the largest millisecond value.
+pub fn modal_speed_ms(bank: &RelayBank) -> u16 {
+    let mut best_level = SPEED_LEVELS_MS[0];
+    let mut best_count = 0usize;
+
+    for &level in SPEED_LEVELS_MS {
+        let count = bank.relays().iter().filter(|r| r.speed_ms == level).count();
+        if count > best_count || (count == best_count && level > best_level) {
+            best_level = level;
+            best_count = count;
+        }
+    }
+
+    best_level
 }

@@ -18,6 +18,8 @@ mod external_input_behavior;
 
 #[path = "unit/debug_state_tests.rs"]
 mod debug_state_tests;
+#[path = "unit/debug_speed_tests.rs"]
+mod debug_speed_tests;
 
 #[path = "unit/input_debounce_tests.rs"]
 mod input_debounce_tests;
