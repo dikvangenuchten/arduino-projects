@@ -29,6 +29,14 @@ impl RotateScene {
             pending_off: [None; crate::board::RELAY_COUNT],
         }
     }
+
+    fn ensure_input_modes(&self, mut command: TickCommand) -> TickCommand {
+        command.input_mode[0] = Some(crate::engine::InputMode::RisingEdgeToggle);
+        command.input_mode[1] = Some(crate::engine::InputMode::Counter(2));
+        command.input_mode[2] = Some(crate::engine::InputMode::PressDetection);
+        command.input_mode[3] = Some(crate::engine::InputMode::PressDetection);
+        command
+    }
 }
 
 impl Scene for RotateScene {
@@ -43,16 +51,33 @@ impl Scene for RotateScene {
 
     fn update(&mut self, ctx: &SceneContext) -> TickCommand {
         let mut command = ctx.current.identity_command();
+        command = self.ensure_input_modes(command);
 
-        if ctx.current.input_state[1] {
-            self.speed = (self.speed + 1).min(5000);
-        } else if ctx.current.input_state[2] {
-            self.speed = self.speed.saturating_sub(1).max(1);
+        match (
+            ctx.current.input_state[1],
+            ctx.current.input_state[2],
+            ctx.current.input_state[3],
+        ) {
+            (0, up, low) => {
+                if up == 1 {
+                    self.speed = (self.speed + 100).min(5000);
+                } else if low == 1 {
+                    self.speed = self.speed.saturating_sub(100).max(1);
+                }
+            }
+            (1, up, low) => {
+                if up == 1 {
+                    self.lag = (self.lag + 10).min(5000);
+                } else if low == 1 {
+                    self.lag = self.lag.saturating_sub(10).max(1);
+                }
+            }
+            _ => {}
         }
 
         if ctx.current.tick % self.speed == 0 {
             let idx = self.active_idx;
-            let next_idx = if ctx.current.input_state[0] {
+            let next_idx = if ctx.current.input_state[0] == 1 {
                 (idx + 1) % ctx.current.relay_state.len()
             } else {
                 (idx + ctx.current.relay_state.len() - 1) % ctx.current.relay_state.len()
@@ -82,7 +107,15 @@ impl Scene for RotateScene {
             }
         }
 
-        command.display = ((self.speed % 10_000) as u16).into();
+        command.display = [
+            ctx.current.input_state[0],
+            ctx.current.input_state[1],
+            // (self.speed % 1000).min(9).max(0) as u8,
+            // (self.lag % 1000).min(9).max(0) as u8,
+            ctx.current.input_state[2],
+            ctx.current.input_state[3],
+        ]
+        .into();
         command
     }
 }

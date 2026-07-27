@@ -3,7 +3,7 @@ use super::{SceneContext, SceneId, SceneSelector};
 /// Cycles through all [`SceneId`] variants in order on every rising edge of one button.
 pub struct ButtonCycleSelector {
     index: usize,
-    last_state: bool,
+    last_state: u8,
 }
 
 impl ButtonCycleSelector {
@@ -11,7 +11,7 @@ impl ButtonCycleSelector {
     pub fn new(index: usize) -> Self {
         Self {
             index,
-            last_state: false,
+            last_state: 0,
         }
     }
 }
@@ -19,14 +19,16 @@ impl ButtonCycleSelector {
 impl SceneSelector for ButtonCycleSelector {
     fn next_scene(&mut self, ctx: &SceneContext, current: SceneId) -> SceneId {
         let now = ctx.current.input_state[self.index];
-        let mut next = current;
 
-        if now && !self.last_state {
-            next = match current {
-                SceneId::Idle => SceneId::Rotate,
-                SceneId::Rotate => SceneId::Idle,
-            };
-        }
+        let next = if now != self.last_state {
+            match now {
+                0 => SceneId::Idle,
+                1 => SceneId::Rotate,
+                _ => current,
+            }
+        } else {
+            current
+        };
 
         self.last_state = now;
         next

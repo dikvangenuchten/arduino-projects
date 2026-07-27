@@ -2,8 +2,8 @@
 As part of Jeugd Aktief 2026 podium, the control for the lighting.
 
 # Board
-- Eletechsup IO22D08
-- Arduino
+- Eletechsup - IO22D08
+- Arduino - Pro mini ATMEGA328P 5V/16M
 
 
 # Goals

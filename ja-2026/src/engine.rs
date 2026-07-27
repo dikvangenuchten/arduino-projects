@@ -88,7 +88,7 @@ pub enum InputMode {
     /// Counter of rising edges detected on the raw input. Wraps at custom limit.
     Counter(u8), // (wrap limit)
     /// Press detection
-    PressDetection
+    PressDetection,
 }
 
 /// Static configuration applied when constructing an [`Engine`].
