@@ -30,7 +30,7 @@ Replace the monolithic control policy with a `no_std`, host-testable library con
 17. Implement the default external mapping in one static configuration: `I0-I3` relay keys 1-4, `I4` Shift, `I5` Global, `I6` Speed, `I7` Reserved. Without Shift, relay keys target relays 1-4 and emit power toggles; with Shift, they target relays 5-8 and emit blink toggles. Shift also selects global blink and `SpeedAllDown`; unshifted Speed emits `SpeedAllUp`.
 18. Keep Shift mode represented by a small enum/constant with momentary as the only required behavior; a future latched variant may be added later, but do not implement unrequested latch state now.
 
-### Phase 4 - Read-only diagnostics
+### Phase 4 - Read-only diagnostics [DONE]
 19. Build diagnostics from immutable snapshots/data only; no diagnostic API receives mutable relay/controller state.
 20. Debounce built-in buttons using the same 10 ms rule. Direct view selection is `B0` Speed, `B1` Inputs, `B2` Relay, `B3` Reserved.
 21. Speed view computes the mode of all eight stored per-relay periods and displays it as `1200`, `0800`, `0500`, `0300`, or `0150`. If multiple periods have equal highest frequency, choose the largest millisecond value. Test uniform, unique-mode, two-way tie, and all-distinct cases.
