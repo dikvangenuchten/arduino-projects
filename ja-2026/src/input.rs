@@ -4,8 +4,8 @@
 //! active-low normalization by the board), detect press edges, resolve
 //! Shift, and map to semantic `Action`s via one static table.
 
-use crate::config::{ShiftMode, DEBOUNCE_SAMPLES, INPUT_COUNT};
 use crate::action::Action;
+use crate::config::{ShiftMode, DEBOUNCE_SAMPLES, INPUT_COUNT, SHIFT_MODE};
 
 /// Debounces `N` independent logical input lines.
 ///
@@ -32,17 +32,23 @@ impl<const N: usize> Debouncer<N> {
     /// Feed one 1 ms raw sample for all `N` lines; return the updated
     /// stable snapshot.
     pub fn sample(&mut self, raw: [bool; N]) -> [bool; N] {
-        for i in 0..N {
-            if raw[i] == self.candidate[i] {
-                if self.count[i] < DEBOUNCE_SAMPLES {
-                    self.count[i] += 1;
+        for (((stable, candidate), count), raw) in self
+            .stable
+            .iter_mut()
+            .zip(self.candidate.iter_mut())
+            .zip(self.count.iter_mut())
+            .zip(raw.iter())
+        {
+            if *raw == *candidate {
+                if *count < DEBOUNCE_SAMPLES {
+                    *count += 1;
                 }
-                if self.count[i] >= DEBOUNCE_SAMPLES {
-                    self.stable[i] = self.candidate[i];
+                if *count >= DEBOUNCE_SAMPLES {
+                    *stable = *candidate;
                 }
             } else {
-                self.candidate[i] = raw[i];
-                self.count[i] = 1;
+                *candidate = *raw;
+                *count = 1;
             }
         }
         self.stable
@@ -109,4 +115,48 @@ pub fn map_edges(edges: [bool; INPUT_COUNT], shifted: bool) -> [Option<Action>; 
     }
 
     actions
+}
+
+/// Combines debouncing, press-edge detection, and Shift-aware mapping for
+/// the eight external inputs into one per-tick orchestrator.
+pub struct ExternalInputs {
+    debouncer: Debouncer<INPUT_COUNT>,
+    prev_stable: [bool; INPUT_COUNT],
+}
+
+impl ExternalInputs {
+    /// Construct with all lines idle.
+    pub fn new() -> Self {
+        ExternalInputs {
+            debouncer: Debouncer::new(),
+            prev_stable: [false; INPUT_COUNT],
+        }
+    }
+
+    /// Feed one 1 ms raw sample for all eight external inputs (already
+    /// active-low normalized by the board) and return this tick's emitted
+    /// actions, keyed by input index.
+    pub fn tick_1ms(&mut self, raw: [bool; INPUT_COUNT]) -> [Option<Action>; INPUT_COUNT] {
+        // Commit one stable snapshot first, atomically, for all lines.
+        let stable = self.debouncer.sample(raw);
+
+        let mut edges = [false; INPUT_COUNT];
+        for i in 0..INPUT_COUNT {
+            edges[i] = stable[i] && !self.prev_stable[i];
+        }
+
+        // Resolve Shift from the just-committed snapshot so a Shift press
+        // accepted on the same tick as an action press is already shifted.
+        let shifted = resolve_shifted(SHIFT_MODE, stable[IDX_SHIFT]);
+        let actions = map_edges(edges, shifted);
+
+        self.prev_stable = stable;
+        actions
+    }
+}
+
+impl Default for ExternalInputs {
+    fn default() -> Self {
+        Self::new()
+    }
 }

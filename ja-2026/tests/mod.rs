@@ -13,6 +13,8 @@ mod lib_tests;
 mod blink_state_behavior;
 #[path = "behavior/blink_speed_behavior.rs"]
 mod blink_speed_behavior;
+#[path = "behavior/external_input_behavior.rs"]
+mod external_input_behavior;
 
 #[path = "unit/input_debounce_tests.rs"]
 mod input_debounce_tests;
