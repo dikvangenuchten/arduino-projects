@@ -29,3 +29,6 @@ mod button_inputs_tests;
 mod input_debounce_tests;
 #[path = "unit/input_mapping_tests.rs"]
 mod input_mapping_tests;
+
+#[path = "behavior/controller_integration_behavior.rs"]
+mod controller_integration_behavior;

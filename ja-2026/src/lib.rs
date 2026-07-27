@@ -16,6 +16,8 @@ pub mod relay;
 pub mod action;
 pub mod input;
 pub mod debug;
+pub mod board_api;
+pub mod wrapper;
 
 #[cfg(test)]
 #[path = "../tests/mod.rs"]
