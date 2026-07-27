@@ -35,10 +35,22 @@ Compile for AVR and upload to the board via USB:
 
 Or manually:
 ```bash
-cargo build -Z build-std=core --release
+cargo run -Z build-std=core --release
 ```
 
 The `ravedude` runner will automatically detect the serial device and program it.
+
+### Lint Code with Clippy
+Check for common Rust mistakes and style improvements:
+
+```bash
+./clippy.sh
+```
+
+Or manually:
+```bash
+cargo clippy -Z build-std=core
+```
 
 ### Development Workflow
 1. Write/update failing tests in the relevant module (phase-specific test modules)
