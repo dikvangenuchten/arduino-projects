@@ -4,8 +4,8 @@
 //! calculation, and page selection. No function here receives mutable
 //! relay/controller state; rendering only ever reads shared snapshots.
 
-use crate::config::{BUTTON_COUNT, SPEED_LEVELS_MS};
-use crate::relay::RelayBank;
+use crate::config::{BUTTON_COUNT, INPUT_COUNT, SPEED_LEVELS_MS};
+use crate::relay::{RelayBank, RelayMode};
 
 /// Which diagnostic view is currently selected.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -118,4 +118,60 @@ pub fn modal_speed_ms(bank: &RelayBank) -> u16 {
     }
 
     best_level
+}
+
+/// Render the currently selected diagnostic view into four display digits,
+/// ready for one `show_digit` call per position.
+pub fn render(
+    state: &DiagnosticState,
+    bank: &RelayBank,
+    stable_inputs: [bool; INPUT_COUNT],
+) -> [u8; 4] {
+    match state.view {
+        DiagnosticView::Speed => digits_from_number(modal_speed_ms(bank)),
+        DiagnosticView::Inputs => {
+            let offset = page_offset(state.inputs_page);
+            let mut digits = [0u8; 4];
+            for (i, digit) in digits.iter_mut().enumerate() {
+                *digit = stable_inputs[offset + i] as u8;
+            }
+            digits
+        }
+        DiagnosticView::Relay => {
+            let offset = page_offset(state.relay_page);
+            let mut digits = [0u8; 4];
+            for (i, digit) in digits.iter_mut().enumerate() {
+                *digit = relay_mode_digit(bank.relay(offset + i).mode);
+            }
+            digits
+        }
+    }
+}
+
+/// Channel offset (into an 8-channel array) for the given page.
+fn page_offset(page: Page) -> usize {
+    match page {
+        Page::First => 0,
+        Page::Second => 4,
+    }
+}
+
+/// Split a value into four decimal digits (thousands..ones), left-to-right.
+fn digits_from_number(mut value: u16) -> [u8; 4] {
+    let d0 = (value / 1000) as u8;
+    value %= 1000;
+    let d1 = (value / 100) as u8;
+    value %= 100;
+    let d2 = (value / 10) as u8;
+    let d3 = (value % 10) as u8;
+    [d0, d1, d2, d3]
+}
+
+/// Map a relay mode to its diagnostic digit: 0=Off, 1=Blink, 2=On.
+fn relay_mode_digit(mode: RelayMode) -> u8 {
+    match mode {
+        RelayMode::Off => 0,
+        RelayMode::Blink => 1,
+        RelayMode::On => 2,
+    }
 }
