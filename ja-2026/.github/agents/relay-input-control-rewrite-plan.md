@@ -24,7 +24,7 @@ Replace the monolithic control policy with a `no_std`, host-testable library con
 13. Route half-cycle selection through one small per-relay function or timing-policy enum rather than indexing the table directly throughout the engine. Initially it implements only fixed speed levels; a future `Random` per-relay policy can choose a new duration at each phase transition with an injected PRNG source. Random blinking and PRNG implementation are out of current scope.
 14. State explicitly that this replaces the existing asymmetric `RelayPattern::Blink { on_ticks, off_ticks }` API. Fixed mode remains 50/50, but relay speeds may differ.
 
-### Phase 3 - Debounce and input mapping
+### Phase 3 - Debounce and input mapping [DONE]
 15. Separate debouncing from mapping. Debounce all eight external inputs and four built-in buttons after active-low normalization, accepting a change after 10 consecutive 1 ms samples.
 16. Test press edge, held input, release/repress, bounce reset, simultaneous actions, and Shift/action acceptance on the same tick. Commit one stable snapshot first, then resolve Shift before emitting action press edges, so Shift and action accepted together are shifted.
 17. Implement the default external mapping in one static configuration: `I0-I3` relay keys 1-4, `I4` Shift, `I5` Global, `I6` Speed, `I7` Reserved. Without Shift, relay keys target relays 1-4 and emit power toggles; with Shift, they target relays 5-8 and emit blink toggles. Shift also selects global blink and `SpeedAllDown`; unshifted Speed emits `SpeedAllUp`.
