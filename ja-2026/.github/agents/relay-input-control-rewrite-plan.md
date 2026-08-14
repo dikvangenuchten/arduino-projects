@@ -40,7 +40,7 @@ Replace the monolithic control policy with a `no_std`, host-testable library con
 ### Phase 5 - AVR integration [DONE]
 24. Refactor `Io22d08Controller` into the orchestrator: read normalized hardware snapshots through `Io22d08Api`, debounce/map external inputs, dispatch all emitted semantic actions, tick each relay's blink engine once per consumed 1 ms timer tick, flush changed relay outputs, update the selected diagnostic display, and call the board tick.
 25. Remove the example counter and direct button-to-relay policy from `main.rs`; retain peripheral setup, interrupt enabling, controller construction, and the pending-tick loop.
-26. Boot with all relays Off and each relay's speed index set to `2`; add no EEPROM persistence.
+26. Boot with all relays On and each relay's speed index set to `2`; add no EEPROM persistence.
 27. Update README controls, mode transitions, per-relay speed ownership, half-cycle timing, diagnostics, and boot defaults. Note that the current Speed key changes all stored relay speeds even though the model permits them to diverge.
 
 ### Phase 6 - Regression and refactor [DONE]

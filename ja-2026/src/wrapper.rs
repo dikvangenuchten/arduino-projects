@@ -11,7 +11,7 @@ use crate::board_api::{BoardError, Io22d08Api};
 use crate::config::{BUTTON_COUNT, INPUT_COUNT, RELAY_COUNT};
 use crate::debug::{render, ButtonInputs, DiagnosticState};
 use crate::input::ExternalInputs;
-use crate::relay::RelayBank;
+use crate::relay::{RelayBank, RelayMode};
 
 /// Thin AVR orchestrator: owns the pure domain state and drives one
 /// `Io22d08Api` implementation from it.
@@ -33,12 +33,17 @@ impl<B> Io22d08Controller<B>
 where
     B: Io22d08Api,
 {
-    /// Construct with all relays Off at boot speed and the Speed
+    /// Construct with all relays On at boot speed and the Speed
     /// diagnostic view selected.
     pub fn new(board: B) -> Self {
+        let mut relays = RelayBank::new();
+        for idx in 0..RELAY_COUNT {
+            relays.set_mode(idx, RelayMode::On);
+        }
+
         Self {
             board,
-            relays: RelayBank::new(),
+            relays,
             external_inputs: ExternalInputs::new(),
             buttons: ButtonInputs::new(),
             diagnostics: DiagnosticState::new(),

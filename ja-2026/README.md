@@ -64,7 +64,7 @@ half-cycle finishes.
 
 ### Boot defaults
 
-All 8 relays boot `Off` with speed index 2 (500 ms). The diagnostic
+All 8 relays boot `On` with speed index 2 (500 ms). The diagnostic
 display boots on the Speed view. Nothing is persisted across power
 cycles (no EEPROM).
 
